@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Try Out Kepemimpinan dan Pengelolaan Sekolah</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16283d;
+    --ink-soft:#3c5066;
+    --paper:#f6f3ea;
+    --paper-raised:#ffffff;
+    --line:#dcd5c2;
+    --gold:#a9781f;
+    --gold-soft:#f1e6c9;
+    --good:#3d6b4c;
+    --good-bg:#e6efe6;
+    --bad:#a83e2c;
+    --bad-bg:#f6e6e1;
+    --navy2:#1e3a56;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:15px;
+    line-height:1.55;
+    min-height:100vh;
+  }
+  .app{
+    max-width:1180px;
+    margin:0 auto;
+    padding:20px 18px 60px;
+  }
+  header.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:20px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:16px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+  }
+  header.top .title-block h1{
+    font-family:'Source Serif 4', serif;
+    font-weight:700;
+    font-size:28px;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  header.top .title-block p{
+    margin:0;
+    color:var(--ink-soft);
+    font-size:13.5px;
+  }
+  .timer-block{
+    text-align:right;
+  }
+  .timer-block .label{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-bottom:2px;
+  }
+  .timer-block .clock{
+    font-variant-numeric:tabular-nums;
+    font-size:30px;
+    font-weight:700;
+    font-family:'Source Serif 4', serif;
+    color:var(--navy2);
+  }
+  .timer-block .clock.warn{ color:var(--bad); }
+
+  .layout{
+    display:grid;
+    grid-template-columns:230px 1fr;
+    gap:26px;
+    align-items:start;
+  }
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr;}
+    .layout .panel{order:1;}
+    .layout .map{order:2; position:static; max-height:260px; overflow-y:auto;}
+  }
+
+  /* sidebar map */
+  .map{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:16px 14px;
+    position:sticky;
+    top:20px;
+  }
+  .map h2{
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--ink-soft);
+    margin:0 0 10px;
+    font-weight:600;
+  }
+  .map .section-group{ margin-bottom:14px; }
+  .map .section-group:last-child{ margin-bottom:0; }
+  .map .section-name{
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink);
+    margin-bottom:6px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .map .section-name span.count{ color:var(--ink-soft); font-weight:400; }
+  .map .grid{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:4px;
+  }
+  .map button.qnum{
+    aspect-ratio:1;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink-soft);
+    font-size:11px;
+    font-family:'IBM Plex Sans', sans-serif;
+    border-radius:2px;
+    cursor:pointer;
+    padding:0;
+  }
+  .map button.qnum:hover{ border-color:var(--navy2); }
+  .map button.qnum.answered{
+    background:var(--navy2);
+    color:#fff;
+    border-color:var(--navy2);
+  }
+  .map button.qnum.current{
+    outline:2px solid var(--gold);
+    outline-offset:1px;
+  }
+  .map button.qnum.correct{ background:var(--good); border-color:var(--good); color:#fff; }
+  .map button.qnum.wrong{ background:var(--bad); border-color:var(--bad); color:#fff; }
+
+  .progress-line{
+    margin-top:14px;
+    padding-top:12px;
+    border-top:1px solid var(--line);
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .progress-line strong{ color:var(--ink); }
+
+  /* main panel */
+  .panel{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:28px 30px 24px;
+    min-height:420px;
+  }
+  .qmeta{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+  }
+  .qmeta .tag{
+    display:inline-block;
+    background:var(--gold-soft);
+    color:var(--gold);
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:.03em;
+    padding:3px 10px;
+    border-radius:20px;
+  }
+  .qmeta .idx{
+    color:var(--ink-soft);
+    font-size:13px;
+  }
+  .qtext{
+    font-family:'Source Serif 4', serif;
+    font-size:19px;
+    line-height:1.5;
+    margin:0 0 22px;
+    max-width:66ch;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .option{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    text-align:left;
+    width:100%;
+    padding:13px 16px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    border-radius:3px;
+    cursor:pointer;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14.5px;
+    color:var(--ink);
+    transition:border-color .12s ease, background .12s ease;
+  }
+  .option:hover{ border-color:var(--navy2); }
+  .option .letter{
+    flex:0 0 auto;
+    width:24px;
+    height:24px;
+    border-radius:50%;
+    border:1px solid var(--ink-soft);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink-soft);
+  }
+  .option.selected{
+    background:var(--gold-soft);
+    border-color:var(--gold);
+  }
+  .option.selected .letter{
+    background:var(--gold);
+    border-color:var(--gold);
+    color:#fff;
+  }
+  .option.correct{
+    background:var(--good-bg);
+    border-color:var(--good);
+  }
+  .option.correct .letter{ background:var(--good); border-color:var(--good); color:#fff; }
+  .option.wrong{
+    background:var(--bad-bg);
+    border-color:var(--bad);
+  }
+  .option.wrong .letter{ background:var(--bad); border-color:var(--bad); color:#fff; }
+  .option:disabled{ cursor:default; }
+
+  .explain{
+    margin-top:18px;
+    padding:14px 16px;
+    background:#fbf8f1;
+    border-left:3px solid var(--gold);
+    font-size:13.5px;
+    color:var(--ink-soft);
+    display:none;
+  }
+  .explain.show{ display:block; }
+  .explain strong{ color:var(--ink); }
+
+  .nav-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:26px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+  }
+  .btn{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    padding:10px 18px;
+    border-radius:3px;
+    border:1px solid var(--ink);
+    background:var(--ink);
+    color:#fff;
+    cursor:pointer;
+  }
+  .btn.secondary{
+    background:transparent;
+    color:var(--ink);
+  }
+  .btn:disabled{ opacity:.35; cursor:default; }
+  .btn.gold{ background:var(--gold); border-color:var(--gold); }
+  .btn.danger{ background:var(--bad); border-color:var(--bad); }
+
+  /* intro / results screens */
+  .screen-center{
+    text-align:center;
+    padding:40px 20px;
+  }
+  .screen-center h2{
+    font-family:'Source Serif 4', serif;
+    font-size:24px;
+    margin-bottom:10px;
+  }
+  .screen-center p{
+    color:var(--ink-soft);
+    max-width:52ch;
+    margin:0 auto 22px;
+  }
+  .start-facts{
+    display:flex;
+    gap:26px;
+    justify-content:center;
+    margin:26px 0 30px;
+    flex-wrap:wrap;
+  }
+  .start-facts div{
+    text-align:center;
+  }
+  .start-facts .num{
+    font-family:'Source Serif 4', serif;
+    font-size:26px;
+    font-weight:700;
+    color:var(--navy2);
+  }
+  .start-facts .lab{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+
+  .results-summary{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:14px;
+    margin:24px 0 30px;
+  }
+  .results-summary .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:16px;
+  }
+  .results-summary .card .sec{
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .results-summary .card .score{
+    font-family:'Source Serif 4', serif;
+    font-size:22px;
+    font-weight:700;
+  }
+  .results-summary .card .bar{
+    height:5px;
+    background:var(--line);
+    border-radius:3px;
+    margin-top:8px;
+    overflow:hidden;
+  }
+  .results-summary .card .bar span{
+    display:block;
+    height:100%;
+    background:var(--navy2);
+  }
+
+  .review-list{
+    text-align:left;
+    margin-top:10px;
+  }
+  .review-item{
+    border-bottom:1px solid var(--line);
+    padding:14px 2px;
+  }
+  .review-item .rq{
+    font-size:14px;
+    margin-bottom:6px;
+  }
+  .review-item .rmeta{
+    font-size:12px;
+    display:flex;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .review-item .rmeta .pill{
+    padding:2px 8px;
+    border-radius:20px;
+    font-weight:600;
+  }
+  .review-item .rmeta .pill.correct{ background:var(--good-bg); color:var(--good); }
+  .review-item .rmeta .pill.wrong{ background:var(--bad-bg); color:var(--bad); }
+  .review-item .rmeta .pill.blank{ background:var(--gold-soft); color:var(--gold); }
+  .review-item .rexp{
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+
+  .hidden{ display:none !important; }
+.qtext,.rq{white-space:pre-line}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="title-block">
+      <h1>Try Out Kepemimpinan dan Pengelolaan Sekolah</h1>
+      <p>30 soal &middot; kepemimpinan, manajerial, supervisi akademik, dan pembelajaran &middot; dengan pembahasan lengkap</p>
+    </div>
+    <div class="timer-block" id="timerBlock">
+      <div class="label">Sisa waktu</div>
+      <div class="clock" id="clock">00:50:00</div>
+    </div>
+  </header>
+
+  <!-- START SCREEN -->
+  <div id="startScreen" class="panel screen-center">
+    <h2>Siap mengerjakan try out?</h2>
+    <p>Latihan ini berisi 30 soal pilihan ganda tentang kepemimpinan dan pengelolaan sekolah: etika dan kepemimpinan, manajerial (RKAS, BOS, sarana prasarana, visi misi, monev), supervisi dan pengembangan guru, serta pembelajaran dan inovasi. Kerjakan tanpa jeda seperti ujian sesungguhnya.</p>
+    <div class="start-facts">
+      <div><div class="num">30</div><div class="lab">Soal kasus</div></div>
+      <div><div class="num">50</div><div class="lab">Menit</div></div>
+      <div><div class="num">4</div><div class="lab">Kelompok soal</div></div>
+    </div>
+    <button class="btn gold" id="startBtn">Mulai Try Out</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="quizScreen" class="layout hidden">
+    <aside class="map" id="mapPanel"></aside>
+    <main class="panel">
+      <div class="qmeta">
+        <span class="tag" id="qTag"></span>
+        <span class="idx" id="qIdx"></span>
+      </div>
+      <p class="qtext" id="qText"></p>
+      <div class="options" id="qOptions"></div>
+      <div class="nav-row">
+        <button class="btn secondary" id="prevBtn">&larr; Sebelumnya</button>
+        <button class="btn danger" id="finishBtn">Selesai &amp; Kirim</button>
+        <button class="btn" id="nextBtn">Selanjutnya &rarr;</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="resultScreen" class="panel hidden">
+    <div class="screen-center">
+      <h2 id="resultHeadline">Hasil Try Out</h2>
+      <p id="resultSub"></p>
+    </div>
+    <div class="results-summary" id="resultsSummary"></div>
+    <div>
+      <h2 style="font-size:18px; font-family:'Source Serif 4',serif; border-top:1px solid var(--line); padding-top:20px;">Pembahasan lengkap</h2>
+      <div class="review-list" id="reviewList"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ======================= DATA: 30 SOAL ======================= */
+const RAW = [
+{s:"Kepemimpinan & Etika", q:"Dalam rapat sekolah, para guru berbeda pendapat tentang penerapan sistem penilaian baru. Tindakan kepala sekolah yang paling tepat untuk membangun kesepakatan dan memastikan sistem berjalan baik adalah …", opts:["Mengadakan dialog terbuka untuk mendengarkan dan menyatukan berbagai perspektif", "Mendorong kerja sama antarguru untuk menemukan solusi terbaik bagi semua pihak", "Memberikan pelatihan agar guru memahami manfaat sistem baru dengan lebih baik", "Menyusun panduan yang jelas untuk membantu guru menerapkan sistem dengan optimal"], correct:0, e:"Dialog terbuka memberi ruang bagi semua pihak untuk menyampaikan pandangan dan membangun kesepakatan bersama."},
+{s:"Kepemimpinan & Etika", q:"Kepala sekolah menerima hadiah mewah dan fasilitas perjalanan dari kontraktor yang memenangkan proyek pembangunan tanpa proses seleksi transparan. Kualitas pekerjaan buruk dan terlambat, tetapi hadiah dianggap sebagai bentuk apresiasi. Indikator utama kepemimpinan yang baik dalam pengelolaan anggaran sekolah adalah …", opts:["Transparansi dalam penggunaan dana sekolah", "Akuntabilitas dalam setiap kebijakan yang dibuat", "Pelaporan keuangan yang terbuka kepada publik dan pemangku kepentingan sekolah", "Komitmen menjaga integritas dalam setiap pengambilan keputusan"], correct:3, e:"Integritas berarti bertindak jujur, menghindari konflik kepentingan, dan menolak keuntungan yang dapat memengaruhi keputusan."},
+{s:"Pembelajaran & Inovasi", q:"Kepala sekolah ingin meningkatkan motivasi belajar peserta didik agar lebih aktif dan antusias. Upaya yang paling tepat adalah …", opts:["Menerapkan pembelajaran berbasis proyek", "Menyediakan lingkungan belajar yang interaktif dan menyenangkan", "Memberikan penghargaan atas setiap peningkatan hasil belajar", "Mengembangkan kegiatan ekstrakurikuler"], correct:1, e:"Lingkungan yang aman, interaktif, dan menggembirakan dapat mendorong keterlibatan aktif peserta didik."},
+{s:"Manajerial", q:"Penggunaan dana sekolah yang dapat dipertanggungjawabkan sesuai rencana dan peraturan merupakan prinsip pengelolaan keuangan berupa …", opts:["Akuntabilitas publik", "Efisiensi", "Efektivitas", "Berkeadilan", "Transparansi"], correct:0, e:"Akuntabilitas menuntut penggunaan dana sesuai ketentuan dan dapat dipertanggungjawabkan."},
+{s:"Manajerial", q:"Pemetaan kualifikasi dan kompetensi guru serta tenaga kependidikan digunakan sebagai acuan untuk …", opts:["Pemetaan dan penghargaan pendidik dan tenaga kependidikan", "Penempatan dan penghargaan pendidik dan tenaga kependidikan", "Penugasan dan penghargaan pendidik dan tenaga kependidikan", "Penempatan dan penugasan pendidik dan tenaga kependidikan", "Pemetaan dan penempatan pendidik dan tenaga kependidikan"], correct:3, e:"Pemetaan kompetensi membantu sekolah menempatkan dan menugaskan personel sesuai kualifikasi serta kebutuhan."},
+{s:"Kepemimpinan & Etika", q:"Kepala sekolah yang baik memiliki pandangan ke depan (visioner). Hal yang perlu dikembangkan untuk menjadi kepala sekolah visioner, kecuali …", opts:["Mampu menumbuhkan jiwa kompetisi pada guru dan peserta didik secara individual", "Mampu melihat tren pendidikan dan merancang masa depan sekolah", "Mampu mengembangkan solusi baru untuk menjawab tantangan pendidikan", "Mampu menginspirasi dan memotivasi guru, peserta didik, serta komunitas", "Mampu memastikan implementasi dan evaluasi visi secara berkelanjutan"], correct:0, e:"Kepemimpinan visioner lebih menekankan visi bersama, kolaborasi, inovasi, dan tindak lanjut berkelanjutan daripada kompetisi individual."},
+{s:"Manajerial", q:"Sekolah menerima dana BOS sebesar Rp500 juta untuk tahun pelajaran 2023/2024. Audit menemukan barang senilai Rp200 juta tidak sesuai kualitas yang diharapkan. Tindakan yang paling tepat dalam menangani barang yang tidak sesuai adalah …", opts:["Mengembalikan semua barang yang tidak sesuai kualitas", "Mengajukan permintaan penggantian barang yang tidak sesuai kualitas", "Menghentikan seluruh penggunaan dana BOS dan melaporkan kasus kepada pihak terkait", "Mengabaikan kasus dan melanjutkan penggunaan dana BOS", "Melakukan audit internal untuk mengetahui penyebab pembelian barang yang tidak sesuai"], correct:1, e:"Permintaan penggantian merupakan langkah korektif agar barang yang diterima sesuai spesifikasi dan kebutuhan sekolah. Catatan: pada kunci lain, alternatif yang kadang dipakai adalah audit internal (E) atau pengembalian barang (A); cocokkan dengan modul."},
+{s:"Pembelajaran & Inovasi", q:"Peserta didik mengalami kesulitan dalam matematika dan bahasa Indonesia. Dukungan individual guru belum efektif, motivasi menurun, dan orang tua mulai mengeluh. Langkah awal yang paling efektif adalah …", opts:["Membentuk tim pembelajaran yang melibatkan pihak terkait untuk merancang program remedial dan pembinaan intensif", "Memberikan hukuman kepada peserta didik yang kurang aktif", "Menambah tes dan pekerjaan rumah", "Memberikan sanksi yang lebih tegas", "Menambah jam pelajaran tanpa mengubah metode"], correct:0, e:"Tim dapat menganalisis kebutuhan, menyepakati strategi, dan memantau perkembangan peserta didik secara kolaboratif."},
+{s:"Manajerial", q:"Berikut merupakan metode pengumpulan data dalam monitoring dan evaluasi, kecuali …", opts:["Jajak pendapat", "Observasi", "Wawancara", "Angket", "Survei"], correct:0, e:"Dalam pilihan soal ini, jajak pendapat diposisikan sebagai pilihan yang bukan metode utama pengumpulan data monitoring dan evaluasi. Catatan: dalam praktik, jajak pendapat juga dapat digunakan untuk mengumpulkan data. Catatan: soal ini perlu dicek ke soal asli, karena kelima pilihan pada dasarnya adalah cara mengumpulkan data."},
+{s:"Manajerial", q:"Langkah yang perlu dilakukan ketika menyusun anggaran ke dalam RKAS adalah: (1) merefleksikan kebutuhan pendanaan sekolah; (2) menentukan kegiatan Benahi dalam RKT; (3) merinci barang/jasa yang dibutuhkan; (4) merinci nominal harga. Kombinasi langkah yang paling tepat adalah …", opts:["1 dan 2", "2 dan 3", "1 dan 3", "3 dan 4", "2 dan 4"], correct:3, e:"Setelah kebutuhan kegiatan ditentukan, sekolah merinci barang/jasa dan nominal biaya agar anggaran jelas dan terukur. Catatan: pada kunci lain, langkah 1 dan 2 (refleksi kebutuhan dan penentuan kegiatan Benahi) bisa dimasukkan; cocokkan dengan modul."},
+{s:"Manajerial", q:"Urutan prosedur pengadaan sarana dan prasarana sekolah yang tepat adalah …", opts:["Menganalisis kebutuhan/fungsi; mengelompokkan sarana; membuat proposal; menilai kelayakan/persetujuan; menerima barang", "Menganalisis kebutuhan/fungsi; mengelompokkan sarana; membuat proposal; menilai kelayakan/persetujuan; mengajukan permohonan", "Menganalisis kebutuhan/fungsi; membuat proposal; menilai kelayakan/persetujuan; mengajukan permohonan; menerima barang", "Mengelompokkan sarana; membuat proposal; menilai kelayakan/persetujuan; mengajukan permohonan; menerima barang", "Mengelompokkan sarana; membuat proposal; menganalisis kebutuhan; menilai kelayakan/persetujuan; mengajukan permohonan"], correct:2, e:"Urutan ini mencakup analisis kebutuhan, pengusulan, persetujuan, pengajuan, hingga penerimaan barang. Sesuaikan dengan prosedur pengadaan yang berlaku di satuan pendidikan."},
+{s:"Manajerial", q:"Urutan langkah penyusunan visi dan misi sekolah yang tepat adalah: (1) melakukan wawancara; (2) memilih informasi yang relevan; (3) menganalisis karakteristik/konteks sekolah; (4) merumuskan misi; (5) merumuskan visi.", opts:["1–2–3–5–4", "1–2–3–4–5", "2–1–3–5–4", "2–1–5–4–3", "1–3–2–4–5"], correct:0, e:"Data dikumpulkan melalui wawancara, dipilih yang relevan, lalu konteks dianalisis sebelum visi dan misi dirumuskan."},
+{s:"Manajerial", q:"Pernyataan yang tepat tentang pemilihan kegiatan Benahi adalah: (1) merujuk rumusan Benahi dari Kemendikbudristek; (2) menjadi solusi pertama untuk akar masalah; (3) menjadi solusi utama bagi semua akar masalah; (4) disesuaikan dengan konteks sekolah; (5) disesuaikan dengan sumber daya sekolah.", opts:["1, 2, 4, dan 5", "1, 2, 3, dan 5", "1, 3, 4, dan 5", "1, 2, 3, dan 4", "1, 3, 4, dan 5"], correct:0, e:"Kegiatan Benahi merujuk rumusan Kemendikbudristek, menjadi solusi pertama untuk akar masalah, serta disesuaikan dengan konteks dan sumber daya sekolah. Kegiatan Benahi disesuaikan dengan akar masalah, konteks, dan sumber daya masing-masing sekolah, sehingga pernyataan 3 (solusi utama untuk semua akar masalah) tidak tepat. Kunci diperbaiki dari dokumen asal (1, 3, 4, 5)."},
+{s:"Manajerial", q:"Pendekatan monitoring dan evaluasi program sekolah yang paling baik adalah …", opts:["Melakukan evaluasi berkala dengan data dari berbagai sumber dan observasi langsung", "Hanya melihat hasil ujian peserta didik", "Berfokus pada pelaksanaan tanpa memeriksa hasil", "Melakukan evaluasi hanya pada akhir tahun", "Menambah program tanpa mengevaluasi program sebelumnya"], correct:0, e:"Data beragam dan evaluasi berkala membantu sekolah menilai proses, hasil, serta menentukan perbaikan."},
+{s:"Pembelajaran & Inovasi", q:"Sebuah SMP mengembangkan program kewirausahaan literasi berupa “Kafe Literasi”. Peserta didik menghasilkan buku cerita mini, poster, dan artikel. Setelah enam bulan, partisipasi menurun dan pendapatan stagnan. Strategi inovasi enam langkah berbasis desain yang paling tepat adalah …", opts:["Menyelidiki kebutuhan peserta didik, mengembangkan konsep sesuai minat, lalu menguji secara bertahap", "Menutup kafe literasi", "Mengganti seluruh produk tanpa melibatkan peserta didik", "Menaikkan harga produk", "Menyerahkan seluruh pengelolaan kepada peserta didik tanpa pendampingan"], correct:0, e:"Inovasi perlu berangkat dari kebutuhan pengguna, diuji, dievaluasi, dan disempurnakan berdasarkan umpan balik."},
+{s:"Kepemimpinan & Etika", q:"Di SMA Pelangi, penilaian proyek kurang efektif karena guru hanya memberi tanda centang dan jarang mengajak peserta didik berefleksi. Berdasarkan Care-Based Thinking dan pertimbangan jangka pendek-panjang, tindakan terbaik adalah …", opts:["Berdialog dengan guru tentang kesulitan mereka dan merevisi panduan penilaian proyek", "Memberikan hukuman kepada guru", "Menghapus proyek dan kembali ke tes tertulis", "Mewajibkan laporan mingguan dengan aturan baru", "Menunggu hingga tahun ajaran berikutnya"], correct:0, e:"Dialog yang peduli membantu memahami kendala sekaligus memperbaiki sistem penilaian secara berkelanjutan."},
+{s:"Kepemimpinan & Etika", q:"Seorang peserta didik melanggar aturan karena sedang menghadapi tekanan keluarga yang berat. Kepala sekolah menghadapi dilema antara keadilan dan belas kasih. Pendekatan yang paling tepat adalah …", opts:["Memberikan sanksi yang adil disertai konseling atau pendampingan", "Mengabaikan pelanggaran", "Memberikan sanksi tanpa mempertimbangkan konteks", "Menyerahkan keputusan sepenuhnya kepada satu guru", "Menunda keputusan sampai orang tua tenang"], correct:0, e:"Pendekatan ini tetap menjaga aturan sambil memperhatikan kebutuhan dan kondisi peserta didik."},
+{s:"Pembelajaran & Inovasi", q:"Dalam model inovasi berbasis desain enam langkah, kombinasi tindakan yang paling berpotensi menghasilkan inovasi berdampak dan berkelanjutan adalah …", opts:["Mengidentifikasi masalah, menyelidiki kebutuhan pengguna, menerapkan secara bertahap, dan mengevaluasi secara reflektif", "Melaksanakan dan mengevaluasi program, lalu menambah jumlah program", "Berinovasi hanya berdasarkan tren", "Mengumpulkan banyak ide kreatif tanpa menguji kelayakan", "Menunggu instruksi pemerintah daerah"], correct:0, e:"Inovasi berkelanjutan berangkat dari masalah nyata, diuji, dan disempurnakan berdasarkan hasil evaluasi."},
+{s:"Supervisi & Pengembangan Guru", q:"Kepala sekolah ingin mengintegrasikan mentoring dalam pengembangan kompetensi guru. Langkah awal yang paling tepat adalah …", opts:["Menunjuk mentor tanpa mempertimbangkan kecocokan", "Menyusun program mentoring dengan memasangkan guru berpengalaman dan guru yang membutuhkan dukungan", "Menambah tugas tanpa pelatihan", "Mengandalkan pengalaman pribadi guru senior saja", "Tidak melakukan pemantauan"], correct:1, e:"Program yang terstruktur membantu tujuan, peran, jadwal, dan tindak lanjut mentoring menjadi jelas."},
+{s:"Supervisi & Pengembangan Guru", q:"Kepala sekolah menemukan kesenjangan kompetensi di antara para guru. Langkah analitis dan praktis yang paling tepat adalah …", opts:["Meminta guru senior mengajar semua mata pelajaran", "Menganalisis kebutuhan pelatihan dan merancang pengembangan profesional", "Membiarkan guru belajar sendiri melalui internet", "Mengurangi beban kerja guru yang kurang kompeten", "Memberikan insentif tanpa pelatihan"], correct:1, e:"Analisis kebutuhan membantu program pengembangan guru tepat sasaran dan sesuai kesenjangan kompetensi."},
+{s:"Supervisi & Pengembangan Guru", q:"Motivasi kerja sebagian besar guru menurun. Strategi berkelanjutan yang paling tepat untuk memperbaikinya adalah …", opts:["Memberikan sanksi yang ketat", "Melakukan supervisi rutin tanpa umpan balik yang bermakna", "Memberikan pelatihan untuk meningkatkan kompetensi dan penghargaan berbasis kinerja", "Membebaskan guru dari seluruh tugas tambahan", "Mengurangi jam kerja guru berkinerja rendah"], correct:2, e:"Pengembangan kompetensi yang disertai pengakuan atas kinerja dapat memperkuat motivasi dan profesionalisme."},
+{s:"Pembelajaran & Inovasi", q:"Kegiatan peserta didik yang paling mencerminkan pembelajaran menggembirakan adalah …", opts:["Mengerjakan lembar soal sampai selesai", "Menantang peserta didik mengusulkan solusi untuk masalah perundungan di sekolah", "Mengerjakan tugas secara individual tanpa diskusi", "Memiliki ide solusi tetapi takut salah"], correct:1, e:"Kegiatan kontekstual yang memberi ruang ide dan partisipasi dapat membuat belajar lebih bermakna dan menggembirakan."},
+{s:"Pembelajaran & Inovasi", q:"Dalam pembelajaran mendalam, guru membantu peserta didik membangun pengetahuan esensial, pengetahuan untuk penerapan, serta nilai dan karakter. Pengalaman belajar yang paling sesuai adalah …", opts:["Merefleksi", "Mengaplikasi", "Memahami", "Mengingat"], correct:2, e:"Tahap memahami membantu peserta didik membangun pemahaman terhadap konsep, pengetahuan esensial, nilai, dan karakter."},
+{s:"Pembelajaran & Inovasi", q:"Dalam pembelajaran mendalam, peserta didik membangun solusi kreatif atau inovatif untuk masalah nyata, yang dapat berupa produk atau unjuk kerja. Tahap pengalaman belajar tersebut adalah …", opts:["Merefleksi", "Mengaplikasi", "Memahami", "Mengingat"], correct:1, e:"Tahap mengaplikasi mengajak peserta didik menggunakan pengetahuan untuk menyelesaikan masalah konkret."},
+{s:"Supervisi & Pengembangan Guru", q:"Praktik yang paling mencerminkan teknik coaching dalam supervisi akademik adalah …", opts:["Memberi tahu guru secara rinci apa yang harus dilakukan lalu menetapkan pertemuan berikutnya", "Mengajukan pertanyaan reflektif agar guru menganalisis praktik pembelajarannya", "Melakukan evaluasi mendadak", "Hanya berfokus pada kepatuhan terhadap standar"], correct:1, e:"Pertanyaan reflektif mendorong guru menemukan pemahaman dan solusi sendiri dengan dukungan kepala sekolah."},
+{s:"Pembelajaran & Inovasi", q:"Berikut ini yang bukan merupakan prinsip pembelajaran mendalam adalah …", opts:["Berkesadaran", "Bermakna", "Menggembirakan", "Menyebutkan"], correct:3, e:"Prinsip pembelajaran mendalam adalah berkesadaran, bermakna, dan menggembirakan."},
+{s:"Pembelajaran & Inovasi", q:"Kegiatan yang menunjukkan pembelajaran berkesadaran (mindful) adalah …", opts:["Menghafalkan sebanyak mungkin informasi", "Melibatkan peserta didik secara aktif dalam proses pembelajaran", "Berfokus hanya pada nilai ujian", "Memberikan tugas sebanyak-banyaknya"], correct:1, e:"Pembelajaran berkesadaran membantu peserta didik memahami tujuan, terlibat aktif, dan menyadari proses belajarnya."},
+{s:"Kepemimpinan & Etika", q:"Di sekolah, hanya beberapa guru ditugaskan menyiapkan acara Hari Guru, sementara guru lainnya tidak terlibat sehingga acara kurang berhasil. Respons kepala sekolah yang paling tepat adalah …", opts:["Mengajak seluruh warga sekolah, terutama guru dan tenaga kependidikan, bermusyawarah dalam setiap program sekolah", "Mempertanyakan guru yang tidak berpartisipasi", "Meminta wakil kepala sekolah menemui staf yang tidak terlibat", "Membentuk tim evaluasi yang hanya melaporkan hasil kegiatan", "Mengingatkan bahwa kolaborasi itu penting"], correct:0, e:"Pelibatan sejak perencanaan membangun rasa memiliki, pembagian peran, dan tanggung jawab bersama."},
+{s:"Supervisi & Pengembangan Guru", q:"Sebuah sekolah telah lama berdiri dan memiliki banyak peserta didik, tetapi pembelajaran terasa membosankan, metode kurang bervariasi, diferensiasi hanya dilakukan sebagian guru, pembelajaran kurang kontekstual, dan budaya umpan balik belum terbentuk. Tindakan kepala sekolah yang paling tepat adalah …", opts:["Membangun budaya kolaboratif melalui observasi kelas antarguru dan diskusi untuk perbaikan pembelajaran", "Meminta pengawas membina guru", "Melakukan supervisi intensif hanya kepada guru yang bermasalah", "Mengingatkan pentingnya kualitas tanpa memberikan dukungan", "Mengadakan IHT untuk meningkatkan kompetensi"], correct:0, e:"Kolaborasi dan refleksi sejawat membantu guru saling belajar, mencoba strategi, serta memperbaiki pembelajaran secara berkelanjutan."},
+{s:"Supervisi & Pengembangan Guru", q:"Para guru merasa gugup, kurang percaya diri, dan takut berbicara di depan umum sehingga menolak menjadi pembawa acara atau menyambut tamu. Tindakan kepala sekolah yang paling tepat adalah …", opts:["Mengadakan pelatihan keterampilan berbicara di depan umum bagi guru dan tenaga kependidikan", "Meminta guru belajar sendiri", "Meminta guru yang mahir berbagi pengalaman saja", "Sering memberikan motivasi tanpa latihan", "Menerima bahwa setiap orang memiliki kelebihan masing-masing"], correct:0, e:"Pelatihan disertai praktik dan umpan balik dapat meningkatkan keterampilan serta kepercayaan diri."}
+];
+
+const QUESTIONS = RAW.map((r,i)=>({
+  id:i+1,
+  section:r.s,
+  text:r.q,
+  options:r.opts,
+  correct:r.correct,
+  explain:r.e
+}));
+
+const SECTIONS = ["Kepemimpinan & Etika","Manajerial","Supervisi & Pengembangan Guru","Pembelajaran & Inovasi"];
+const LETTERS = ["A","B","C","D","E"];
+
+/* ======================= STATE ======================= */
+let answers = new Array(QUESTIONS.length).fill(null);
+let current = 0;
+let submitted = false;
+let timeLeft = 50*60;
+let timerId = null;
+
+/* ======================= DOM refs ======================= */
+const startScreen = document.getElementById('startScreen');
+const quizScreen = document.getElementById('quizScreen');
+const resultScreen = document.getElementById('resultScreen');
+const clockEl = document.getElementById('clock');
+const mapPanel = document.getElementById('mapPanel');
+const qTag = document.getElementById('qTag');
+const qIdx = document.getElementById('qIdx');
+const qText = document.getElementById('qText');
+const qOptions = document.getElementById('qOptions');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const finishBtn = document.getElementById('finishBtn');
+
+document.getElementById('startBtn').addEventListener('click', startQuiz);
+prevBtn.addEventListener('click', ()=>{ if(current>0){current--; renderQuestion();} });
+nextBtn.addEventListener('click', ()=>{ if(current<QUESTIONS.length-1){current++; renderQuestion();} });
+finishBtn.addEventListener('click', ()=>{ if(confirm('Yakin ingin menyelesaikan dan mengirim jawaban? Soal yang belum dijawab akan dianggap kosong.')){ submitTest(); } });
+
+function startQuiz(){
+  startScreen.classList.add('hidden');
+  quizScreen.classList.remove('hidden');
+  renderMap();
+  renderQuestion();
+  startTimer();
+}
+
+function startTimer(){
+  timerId = setInterval(()=>{
+    timeLeft--;
+    updateClock();
+    if(timeLeft<=0){
+      clearInterval(timerId);
+      submitTest();
+    }
+  },1000);
+}
+
+function updateClock(){
+  const h = Math.floor(timeLeft/3600);
+  const m = Math.floor((timeLeft%3600)/60);
+  const s = timeLeft%60;
+  const pad = n=>String(n).padStart(2,'0');
+  clockEl.textContent = pad(h)+":"+pad(m)+":"+pad(s);
+  if(timeLeft<=300){ clockEl.classList.add('warn'); }
+}
+
+function renderMap(){
+  mapPanel.innerHTML = '<h2>Peta Soal</h2>';
+  SECTIONS.forEach(sec=>{
+    const qsInSection = QUESTIONS.filter(q=>q.section===sec);
+    const group = document.createElement('div');
+    group.className = 'section-group';
+    const answeredCount = qsInSection.filter(q=>answers[q.id-1]!==null).length;
+    group.innerHTML = '<div class="section-name">'+sec+'<span class="count">'+answeredCount+'/'+qsInSection.length+'</span></div>';
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    qsInSection.forEach(q=>{
+      const btn = document.createElement('button');
+      btn.className = 'qnum';
+      btn.textContent = q.id;
+      btn.id = 'map-q'+q.id;
+      btn.addEventListener('click', ()=>{ current = q.id-1; renderQuestion(); });
+      grid.appendChild(btn);
+    });
+    group.appendChild(grid);
+    mapPanel.appendChild(group);
+  });
+  const prog = document.createElement('div');
+  prog.className = 'progress-line';
+  prog.id = 'progressLine';
+  mapPanel.appendChild(prog);
+  updateMapStates();
+}
+
+function updateMapStates(){
+  QUESTIONS.forEach(q=>{
+    const btn = document.getElementById('map-q'+q.id);
+    if(!btn) return;
+    btn.classList.toggle('answered', answers[q.id-1]!==null);
+    btn.classList.toggle('current', q.id-1===current);
+    if(submitted){
+      btn.classList.toggle('correct', answers[q.id-1]===q.correct);
+      btn.classList.toggle('wrong', answers[q.id-1]!==null && answers[q.id-1]!==q.correct);
+    }
+  });
+  const answeredTotal = answers.filter(a=>a!==null).length;
+  const pl = document.getElementById('progressLine');
+  if(pl) pl.innerHTML = '<strong>'+answeredTotal+'</strong> dari '+QUESTIONS.length+' soal terjawab';
+}
+
+function renderQuestion(){
+  const q = QUESTIONS[current];
+  qTag.textContent = q.section;
+  qIdx.textContent = 'Soal '+q.id+' dari '+QUESTIONS.length;
+  qText.textContent = q.text;
+  qOptions.innerHTML = '';
+  q.options.forEach((optText, i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = '<span class="letter">'+LETTERS[i]+'</span><span>'+optText+'</span>';
+    if(answers[current]===i) btn.classList.add('selected');
+    btn.addEventListener('click', ()=>{
+      if(submitted) return;
+      answers[current] = i;
+      renderQuestion();
+      updateMapStates();
+    });
+    qOptions.appendChild(btn);
+  });
+  prevBtn.disabled = current===0;
+  nextBtn.disabled = current===QUESTIONS.length-1;
+  updateMapStates();
+}
+
+function submitTest(){
+  submitted = true;
+  clearInterval(timerId);
+  quizScreen.classList.add('hidden');
+  resultScreen.classList.remove('hidden');
+  renderResults();
+}
+
+function renderResults(){
+  const total = QUESTIONS.length;
+  let correctCount = 0;
+  const bySection = {};
+  SECTIONS.forEach(s=>bySection[s]={correct:0,total:0});
+
+  QUESTIONS.forEach(q=>{
+    bySection[q.section].total++;
+    if(answers[q.id-1]===q.correct){
+      correctCount++;
+      bySection[q.section].correct++;
+    }
+  });
+
+  const score = Math.round((correctCount/total)*100);
+  document.getElementById('resultHeadline').textContent = 'Skor Anda: '+score+' ('+correctCount+'/'+total+' benar)';
+  document.getElementById('resultSub').textContent = 'Gunakan skor ini sebagai patokan belajar. Pelajari pembahasan, terutama kelompok dengan skor terendah.';
+
+  const summaryEl = document.getElementById('resultsSummary');
+  summaryEl.innerHTML = '';
+  SECTIONS.forEach(sec=>{
+    const d = bySection[sec];
+    const pct = Math.round((d.correct/d.total)*100);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = '<div class="sec">'+sec+'</div><div class="score">'+d.correct+'/'+d.total+'</div><div class="bar"><span style="width:'+pct+'%"></span></div>';
+    summaryEl.appendChild(card);
+  });
+
+  const reviewEl = document.getElementById('reviewList');
+  reviewEl.innerHTML = '';
+  QUESTIONS.forEach(q=>{
+    const userAns = answers[q.id-1];
+    const isCorrect = userAns===q.correct;
+    const isBlank = userAns===null;
+    const item = document.createElement('div');
+    item.className = 'review-item';
+    const pillClass = isBlank ? 'blank' : (isCorrect ? 'correct' : 'wrong');
+    const pillText = isBlank ? 'Tidak dijawab' : (isCorrect ? 'Benar' : 'Salah');
+    item.innerHTML =
+      '<div class="rmeta"><span class="pill '+pillClass+'">'+pillText+'</span><span style="color:var(--ink-soft)">Soal '+q.id+' &middot; '+q.section+'</span></div>'+
+      '<div class="rq">'+q.text+'</div>'+
+      '<div class="rexp"><strong>Jawaban tepat: '+LETTERS[q.correct]+'. '+q.options[q.correct]+'</strong><br>'+q.explain+'</div>';
+    reviewEl.appendChild(item);
+  });
+
+  updateMapStates();
+}
+
+updateClock();
+</script>
+</body>
+</html>
